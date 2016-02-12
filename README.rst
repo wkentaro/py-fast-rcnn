@@ -3,9 +3,14 @@ py-fast-rcnn
 ============
 
 
-For developers
-==============
+Usage
+=====
 
-.. code-block:: bash
+Clone this repository::
 
-  cd python/ && python setup.py develop --user
+  git clone https://github.com/wkentaro/py-fast-rcnn.git
+
+Configure environment::
+
+  cd py-fast-rcnn
+  make
