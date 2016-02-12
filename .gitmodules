@@ -1,0 +1,4 @@
+[submodule "chainer-fast-rcnn"]
+	path = chainer-fast-rcnn
+	url = https://github.com/wkentaro/chainer.git
+	branch = fast-rcnn
