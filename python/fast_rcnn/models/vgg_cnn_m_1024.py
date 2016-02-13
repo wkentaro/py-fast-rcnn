@@ -16,7 +16,7 @@ class VGG_CNN_M_1024(chainer.Chain):
             conv3=L.Convolution2D(256, 512, ksize=3, stride=1, pad=1),
             conv4=L.Convolution2D(512, 512, ksize=3, stride=1, pad=1),
             conv5=L.Convolution2D(512, 512, ksize=3, stride=1, pad=1),
-            fc6=L.Linear(4608, 4096),
+            fc6=L.Linear(18432, 4096),
             fc7=L.Linear(4096, 1024),
             cls_score=L.Linear(1024, 21),
             bbox_pred=L.Linear(1024, 84)
@@ -63,4 +63,8 @@ class VGG_CNN_M_1024(chainer.Chain):
         t_cls, t_bbox = t
         self.cls_loss = F.softmax_cross_entropy(h_cls_score, t_cls)
         self.bbox_loss = F.smooth_l1_loss(bbox_pred, t_bbox)
-        return self.cls_loss, self.bbox_loss
+        if t_cls == 21:
+            L = self.cls_loss
+        else:
+            L = self.cls_loss + 0.5 * self.bbox_loss
+        return L
