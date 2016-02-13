@@ -5,3 +5,6 @@ all:
 load_net:
 	(cd data/scripts && bash fetch_fast_rcnn_models.sh)
 	(python tools/load_net.py)
+
+fetch_chainer_models:
+	(cd data/scripts && bash fetch_chainer_models.sh)

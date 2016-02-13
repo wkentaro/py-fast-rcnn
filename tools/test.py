@@ -23,7 +23,7 @@ PIXEL_MEANS = np.array([102.9801, 115.9465, 122.7717], dtype=np.float32)
 
 
 def get_model():
-    vgg = pickle.load(open('data/chainer_models/VGG.chainermodel'))
+    vgg = pickle.load(open('data/chainer_models/vgg_cnn_m_1024.chainermodel'))
     vgg.to_gpu()
 
     return vgg
