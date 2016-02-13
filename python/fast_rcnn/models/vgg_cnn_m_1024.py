@@ -3,6 +3,7 @@
 
 import chainer
 import chainer.functions as F
+import chainer.links as L
 from chainer import Variable
 
 
@@ -10,18 +11,18 @@ class VGG_CNN_M_1024(chainer.Chain):
 
     def __init__(self):
         super(VGG_CNN_M_1024, self).__init__(
-            conv1=F.Convolution2D(3, 96, ksize=7, stride=2),
-            conv2=F.Convolution2D(96, 256, ksize=5, stride=2, pad=1),
-            conv3=F.Convolution2D(256, 512, ksize=3, stride=1, pad=1),
-            conv4=F.Convolution2D(512, 512, ksize=3, stride=1, pad=1),
-            conv5=F.Convolution2D(512, 512, ksize=3, stride=1, pad=1),
-            fc6=F.Linear(4608, 4096),
-            fc7=F.Linear(4096, 1024),
-            cls_score=F.Linear(1024, 21),
-            bbox_pred=F.Linear(1024, 84)
+            conv1=L.Convolution2D(3, 96, ksize=7, stride=2),
+            conv2=L.Convolution2D(96, 256, ksize=5, stride=2, pad=1),
+            conv3=L.Convolution2D(256, 512, ksize=3, stride=1, pad=1),
+            conv4=L.Convolution2D(512, 512, ksize=3, stride=1, pad=1),
+            conv5=L.Convolution2D(512, 512, ksize=3, stride=1, pad=1),
+            fc6=L.Linear(4608, 4096),
+            fc7=L.Linear(4096, 1024),
+            cls_score=L.Linear(1024, 21),
+            bbox_pred=L.Linear(1024, 84)
         )
 
-    def __call__(self, x, rois, t=None):
+    def __call__(self, x, rois, t=None, train=False):
         h = self.conv1(x)
         h = F.relu(h)
         h = F.local_response_normalization(h, n=5, k=2, alpha=5e-4, beta=.75)
@@ -34,7 +35,6 @@ class VGG_CNN_M_1024(chainer.Chain):
 
         h = self.conv3(h)
         h = F.relu(h)
-        h = F.max_pooling_2d(h, 2, stride=2)
 
         h = self.conv4(h)
         h = F.relu(h)
@@ -46,11 +46,11 @@ class VGG_CNN_M_1024(chainer.Chain):
 
         h = self.fc6(h)
         h = F.relu(h)
-        h = F.dropout(h, train=self.train, ratio=.5)
+        h = F.dropout(h, train=train, ratio=.5)
 
         h = self.fc7(h)
         h = F.relu(h)
-        h = F.dropout(h, train=self.train, ratio=.5)
+        h = F.dropout(h, train=train, ratio=.5)
 
         h_cls_score = self.cls_score(h)
         cls_score = F.softmax(h_cls_score)
@@ -59,6 +59,7 @@ class VGG_CNN_M_1024(chainer.Chain):
         if t is None:
             return cls_score, bbox_pred
 
+        assert train
         t_cls, t_bbox = t
         self.cls_loss = F.softmax_cross_entropy(h_cls_score, t_cls)
         self.bbox_loss = F.smooth_l1_loss(bbox_pred, t_bbox)

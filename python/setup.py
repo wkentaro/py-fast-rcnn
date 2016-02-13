@@ -3,6 +3,25 @@
 
 from setuptools import find_packages
 from setuptools import setup
+import numpy as np
+from distutils.extension import Extension
+from Cython.Distutils import build_ext
+
+
+cmdclass = {}
+ext_modules = [
+    Extension(
+        "fast_rcnn.utils.cython_bbox",
+        ["fast_rcnn/utils/bbox.pyx"],
+        extra_compile_args=["-Wno-cpp", "-Wno-unused-function"],
+    ),
+    Extension(
+        "fast_rcnn.utils.cython_nms",
+        ["fast_rcnn/utils/nms.pyx"],
+        extra_compile_args=["-Wno-cpp", "-Wno-unused-function"],
+    )
+]
+cmdclass.update({'build_ext': build_ext})
 
 
 setup(
@@ -15,6 +34,9 @@ setup(
     install_requires=open('requirements.txt').readlines(),
     license='MIT',
     keywords='machine-learning',
+    cmdclass=cmdclass,
+    ext_modules=ext_modules,
+    include_dirs=[np.get_include()],
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
