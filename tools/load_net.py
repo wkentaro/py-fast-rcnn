@@ -24,4 +24,5 @@ for name, param in net.params.iteritems():
     layer.b.data = param[1].data
     setattr(vgg, name, layer)
 
-pickle.dump(vgg, open('data/chainer_models/VGG.chainermodel', 'wb'), -1)
+with open('data/chainer_models/vgg_cnn_m_1024.chainermodel', 'wb') as f:
+    pickle.dump(vgg, f, -1)
