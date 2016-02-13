@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-sys.path.insert(0, 'fast-rcnn/lib/utils')
-from fast_rcnn.utils import cython_nms
+from fast_rcnn.utils.cython_nms import nms
 import time
 import dlib
 import argparse
@@ -12,6 +11,7 @@ import numpy as np
 import cPickle as pickle
 from fast_rcnn.models.vgg_cnn_m_1024 import VGG_CNN_M_1024
 from chainer import cuda
+from chainer import Variable
 
 CLASSES = ('__background__',
            'aeroplane', 'bicycle', 'bird', 'boat',
@@ -23,7 +23,7 @@ PIXEL_MEANS = np.array([102.9801, 115.9465, 122.7717], dtype=np.float32)
 
 
 def get_model():
-    vgg = pickle.load(open('models/VGG.chainermodel'))
+    vgg = pickle.load(open('data/chainer_models/VGG.chainermodel'))
     vgg.to_gpu()
 
     return vgg
@@ -91,14 +91,14 @@ def draw_result(out, im_scale, clss, bbox, rects, nms_thresh, conf):
             y2 = _center_y + 0.5 * _height
 
             cv.rectangle(out, (int(x1), int(y1)), (int(x2), int(y2)),
-                         (0, 0, 255), 2, cv.LINE_AA)
+                         (0, 0, 255), 2, cv.CV_AA)
             ret, baseline = cv.getTextSize(CLASSES[cls_id],
                                            cv.FONT_HERSHEY_SIMPLEX, 1.0, 1)
             cv.rectangle(out, (int(x1), int(y2) - ret[1] - baseline),
                          (int(x1) + ret[0], int(y2)), (0, 0, 255), -1)
             cv.putText(out, CLASSES[cls_id], (int(x1), int(y2) - baseline),
                        cv.FONT_HERSHEY_SIMPLEX, 1.0, (255, 255, 255), 1,
-                       cv.LINE_AA)
+                       cv.CV_AA)
 
             print CLASSES[cls_id], dets[i, 4]
 
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     parser.add_argument('--out_fn', type=str, default='result.jpg')
     parser.add_argument('--min_size', type=int, default=500)
     parser.add_argument('--nms_thresh', type=float, default=0.3)
-    parser.add_argument('--conf', type=float, default=0.8)
+    parser.add_argument('--conf', type=float, default=0.7)
     args = parser.parse_args()
 
     xp = cuda.cupy if cuda.available else np
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     img = xp.asarray(img)
     rects = xp.asarray(orig_rects)
 
-    cls_score, bbox_pred = vgg.forward(img[xp.newaxis, :, :, :], rects)
+    cls_score, bbox_pred = vgg(Variable(img[xp.newaxis, :, :, :]), Variable(rects))
 
     clss = cuda.cupy.asnumpy(cls_score.data)
     bbox = cuda.cupy.asnumpy(bbox_pred.data)
