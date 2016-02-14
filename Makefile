@@ -12,3 +12,6 @@ fetch_chainer_models:
 load_net_imagenet:
 	(cd data/scripts && bash fetch_imagenet_models.sh)
 	(python tools/load_net_imagenet.py)
+
+preprocess_APC2015berkeley:
+	(cd tools && python preprocess_APC2015berkeley.py)
