@@ -2,3 +2,4 @@ imagenet_models*
 chainer_models.tgz
 fast_rcnn_models*
 APC2015berkeley
+APC2015berkeley_cache
