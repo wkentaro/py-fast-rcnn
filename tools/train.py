@@ -29,8 +29,8 @@ class FastRCNNTrainer(object):
     def __init__(self, model, dataset):
         self.model = model
         (self.train_fnames, self.test_fnames,
-         self.train_targets, self.test_targets) =\
-            train_test_split(dataset.filenames, dataset.targets, test_size=.1)
+         self.train_target, self.test_target) =\
+            train_test_split(dataset.filenames, dataset.target, test_size=.1)
 
         self.optimizer = optimizers.Adam()
         self.optimizer.setup(model)
@@ -44,7 +44,7 @@ class FastRCNNTrainer(object):
         for i in xrange(0, N, batch_size):
             batch_index = random_index[i:i+batch_size]
             batch_fnames = self.train_fnames[batch_index]
-            batch_labels = self.train_targets[batch_index]
+            batch_labels = self.train_target[batch_index]
 
             blobs, bboxes, t_labels, t_bboxes = load_batch_APC2015berkeley(
                 fnames=batch_fnames,
@@ -65,7 +65,7 @@ class FastRCNNTrainer(object):
         for i in xrange(0, N, batch_size):
             batch_index = random_index[i:i+batch_size]
             batch_fnames = self.test_fnames[batch_index]
-            batch_labels = self.test_targets[batch_index]
+            batch_labels = self.test_target[batch_index]
 
             blobs, bboxes, t_labels, t_bboxes = load_batch_APC2015berkeley(
                 fnames=batch_fnames,
@@ -92,14 +92,14 @@ class FastRCNNTrainer(object):
             else:
                 self.batch_loop_train(batch_size)
 
-def load_pretrained_model():
 
+def load_pretrained_model(n_class):
     param_dir = '%s/imagenet_models' % get_data_dir()
     param_fn = '%s/VGG_CNN_M_1024.v2.caffemodel' % param_dir
     model_dir = '%s/python/fast_rcnn/models' % fast_rcnn.get_root_dir()
     model_fn = '%s/test.prototxt' % model_dir
 
-    vgg = VGG_CNN_M_1024()
+    vgg = VGG_CNN_M_1024(n_class=n_class)
     net = caffe.Net(model_fn, param_fn, caffe.TEST)
     for name, param in net.params.iteritems():
         if 'conv' in name:
@@ -116,13 +116,15 @@ def load_pretrained_model():
 
 
 def main():
-    model = load_pretrained_model()
-    model.to_gpu()
-
     dataset = load_APC2015berkeley()
+
+    n_class = len(dataset.target_names)
+    model = load_pretrained_model(n_class=n_class)
+    model.to_gpu()
 
     trainer = FastRCNNTrainer(model, dataset=dataset)
     trainer.main_loop(batch_size=10, epoch_size=10000)
+
 
 if __name__ == '__main__':
     main()
