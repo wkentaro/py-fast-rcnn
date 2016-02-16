@@ -9,7 +9,7 @@ from chainer import Variable
 
 class VGG_CNN_M_1024(chainer.Chain):
 
-    def __init__(self):
+    def __init__(self, n_class):
         super(VGG_CNN_M_1024, self).__init__(
             conv1=L.Convolution2D(3, 96, ksize=7, stride=2),
             conv2=L.Convolution2D(96, 256, ksize=5, stride=2, pad=1),
@@ -18,9 +18,10 @@ class VGG_CNN_M_1024(chainer.Chain):
             conv5=L.Convolution2D(512, 512, ksize=3, stride=1, pad=1),
             fc6=L.Linear(18432, 4096),
             fc7=L.Linear(4096, 1024),
-            cls_score=L.Linear(1024, 21),
-            bbox_pred=L.Linear(1024, 84)
+            cls_score=L.Linear(1024, n_class),
+            bbox_pred=L.Linear(1024, 4 * n_class)
         )
+        self.n_class = n_class
 
     def __call__(self, x, rois, t=None, train=False):
         h = self.conv1(x)
@@ -63,8 +64,8 @@ class VGG_CNN_M_1024(chainer.Chain):
         t_cls, t_bbox = t
         self.cls_loss = F.softmax_cross_entropy(h_cls_score, t_cls)
         self.bbox_loss = F.smooth_l1_loss(bbox_pred, t_bbox)
-        if t_cls == 21:
-            L = self.cls_loss
-        else:
-            L = self.cls_loss + 0.5 * self.bbox_loss
+
+        bg_label = self.n_class
+        lambda_ = 0.5 * (t_cls != bg_label)
+        L = self.cls_loss + lambda_ * self.bbox_loss
         return L
