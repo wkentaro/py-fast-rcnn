@@ -28,6 +28,7 @@ class FastRCNNTrainer(object):
 
     def __init__(self, model, dataset):
         self.model = model
+        self.dataset = dataset
         (self.train_fnames, self.test_fnames,
          self.train_target, self.test_target) =\
             train_test_split(dataset.filenames, dataset.target, test_size=.1)
