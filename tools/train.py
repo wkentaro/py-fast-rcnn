@@ -10,8 +10,11 @@ import numpy as np
 import subprocess
 import matplotlib.pyplot as plt
 from chainer import optimizers
-from fast_rcnn.dataset import load_APC2015berkeley, load_batch_APC2015berkeley
+
+import fast_rcnn
 from fast_rcnn.dataset import get_data_dir
+from fast_rcnn.dataset import load_APC2015berkeley
+from fast_rcnn.dataset import load_batch_APC2015berkeley
 
 
 CLASSES = ('__background__',
@@ -93,7 +96,7 @@ def load_pretrained_model():
 
     param_dir = '%s/imagenet_models' % get_data_dir()
     param_fn = '%s/VGG_CNN_M_1024.v2.caffemodel' % param_dir
-    model_dir = 'python/fast_rcnn/models'
+    model_dir = '%s/python/fast_rcnn/models' % fast_rcnn.get_root_dir()
     model_fn = '%s/test.prototxt' % model_dir
 
     vgg = VGG_CNN_M_1024()
