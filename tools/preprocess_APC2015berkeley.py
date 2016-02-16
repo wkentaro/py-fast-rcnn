@@ -15,6 +15,7 @@ def main():
 N: {0}
 dataset: {1}'''.format(N, dataset))
     bg_label = dataset.target_names.index('__background__')
+    n_labels = len(dataset.target_names)
     max_batch_size = 10
     for i in xrange(0, N, max_batch_size):
         t_start = time.time()
@@ -22,7 +23,8 @@ dataset: {1}'''.format(N, dataset))
         fname_batch = dataset.filenames[i:i+max_batch_size]
         label_batch = dataset.target[i:i+max_batch_size]
         blob_batch, bbox_batch, label_batch, roi_delta_batch =\
-            load_batch_APC2015berkeley(label_batch, bg_label, fname_batch)
+            load_batch_APC2015berkeley(fname_batch, label_batch,
+                                       bg_label, n_labels)
 
         # show stats
         elapsed_time = time.time() - t_start

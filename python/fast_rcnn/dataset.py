@@ -85,12 +85,13 @@ def get_bboxes(orig_img, im_scale, min_size=500, dedup_boxes=1. / 16):
     return rects
 
 
-def get_region_targets(roi, bboxes, label, bg_label, overlap_thresh=.5):
+def get_region_targets(roi, bboxes, label, bg_label, n_labels,
+                       overlap_thresh=.5):
     from fast_rcnn.utils.cython_bbox import bbox_overlaps
     overlaps = bbox_overlaps(roi[np.newaxis, :], bboxes)
     N = len(overlaps[0])
     labels = np.zeros(N).astype(np.int32)
-    roi_deltas = np.zeros((N, 4)).astype(np.float32)
+    roi_deltas = np.zeros((N, n_labels, 4)).astype(np.float32)
     for i, lap in enumerate(overlaps[0]):
         labels[i] = bg_label if lap < overlap_thresh else label
 
@@ -111,11 +112,13 @@ def get_region_targets(roi, bboxes, label, bg_label, overlap_thresh=.5):
         dy = (bbox_center_y - roi_center_y) / roi_height
         dw = np.log(bbox_width / roi_width)
         dh = np.log(bbox_height / roi_height)
-        roi_deltas[i] = [dx, dy, dw, dh]
+        roi_delta = np.zeros((n_labels, 4))
+        roi_delta[labels[i]] = [dx, dy, dw, dh]
+        roi_deltas[i] = roi_delta
     return labels, roi_deltas
 
 
-def load_batch_APC2015berkeley(labels, bg_label, fnames):
+def load_batch_APC2015berkeley(fnames, labels, bg_label, n_labels):
     """Get blob and bboxes from image, roi from mask."""
     blob_batch, bbox_batch, label_batch, roi_delta_batch = [], [], [], []
     i_batch = 0
@@ -152,8 +155,8 @@ def load_batch_APC2015berkeley(labels, bg_label, fnames):
             roi = mask_to_roi(mask, im_scale)
             # get each region labels and roi_deltas
             labels, roi_deltas = get_region_targets(
-                roi.astype(np.float), bboxes[:, 1:].astype(np.float),
-                label, bg_label)
+                roi=roi.astype(np.float), bboxes=bboxes[:, 1:].astype(np.float),
+                label=label, bg_label=bg_label, n_labels=n_labels)
             # save cache
             if not osp.exists(osp.dirname(cache_fname)):
                 os.makedirs(osp.dirname(cache_fname))
@@ -176,5 +179,13 @@ def load_APC2015berkeley():
     data_dir = osp.join(get_data_dir(), 'APC2015berkeley')
     dataset = load_files(data_dir, description='APC2015berkeley',
                          load_content=False)
+    keep = []
+    for i, fname in enumerate(dataset.filenames):
+        if osp.isdir(fname):
+            continue  # skip 'masks' directory
+        keep.append(i)
+    dataset.target = dataset.target[keep]
+    dataset.filenames = dataset.filenames[keep]
     dataset.target_names.append('__background__')
+    dataset.background_label = len(dataset.target_names)
     return dataset
