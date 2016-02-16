@@ -154,24 +154,24 @@ def load_batch_APC2015berkeley(fnames, labels, bg_label, n_labels):
                 mask = mask[:h, :]
             roi = mask_to_roi(mask, im_scale)
             # get each region labels and roi_deltas
-            labels, roi_deltas = get_region_targets(
+            region_labels, roi_deltas = get_region_targets(
                 roi=roi.astype(np.float), bboxes=bboxes[:, 1:].astype(np.float),
                 label=label, bg_label=bg_label, n_labels=n_labels)
             # save cache
             if not osp.exists(osp.dirname(cache_fname)):
                 os.makedirs(osp.dirname(cache_fname))
             with open(cache_fname, 'wb') as f:
-                pickle.dump((blob, bboxes, labels, roi_deltas), f)
+                pickle.dump((blob, bboxes, region_labels, roi_deltas), f)
 
         blob_batch.append(blob)
         bbox_batch.append(bboxes)
-        label_batch.extend(labels.tolist())
+        label_batch.extend(region_labels.tolist())
         roi_delta_batch.append(roi_deltas)
         i_batch += 1
-    blob_batch = np.array(blob_batch)
-    bbox_batch = np.vstack(bbox_batch)
-    label_batch = np.array(label_batch)
-    roi_delta_batch = np.vstack(roi_delta_batch)
+    blob_batch = np.array(blob_batch, dtype=np.float32)
+    bbox_batch = np.vstack(bbox_batch).astype(np.float32)
+    label_batch = np.array(label_batch, dtype=np.int32)
+    roi_delta_batch = np.vstack(roi_delta_batch).astype(np.float32)
     return blob_batch, bbox_batch, label_batch, roi_delta_batch
 
 
