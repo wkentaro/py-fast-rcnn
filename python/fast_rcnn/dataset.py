@@ -115,6 +115,7 @@ def get_region_targets(roi, bboxes, label, bg_label, n_labels,
         roi_delta = np.zeros((n_labels, 4))
         roi_delta[labels[i]] = [dx, dy, dw, dh]
         roi_deltas[i] = roi_delta
+    roi_deltas = roi_deltas.ravel()
     return labels, roi_deltas
 
 
