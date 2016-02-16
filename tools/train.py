@@ -1,28 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import fast_rcnn
-from fast_rcnn.models.vgg_cnn_m_1024 import VGG_CNN_M_1024
-from sklearn.cross_validation import train_test_split
+import subprocess
+
 import caffe
 import chainer
-import numpy as np
-import subprocess
-import matplotlib.pyplot as plt
+from chainer import cuda
 from chainer import optimizers
+from chainer import Variable
+import matplotlib.pyplot as plt
+import numpy as np
+from sklearn.cross_validation import train_test_split
 
 import fast_rcnn
 from fast_rcnn.dataset import get_data_dir
 from fast_rcnn.dataset import load_APC2015berkeley
 from fast_rcnn.dataset import load_batch_APC2015berkeley
+from fast_rcnn.models.vgg_cnn_m_1024 import VGG_CNN_M_1024
 
-
-CLASSES = ('__background__',
-           'aeroplane', 'bicycle', 'bird', 'boat',
-           'bottle', 'bus', 'car', 'cat', 'chair',
-           'cow', 'diningtable', 'dog', 'horse',
-           'motorbike', 'person', 'pottedplant',
-           'sheep', 'sofa', 'train', 'tvmonitor')
 
 class FastRCNNTrainer(object):
 
@@ -54,7 +49,15 @@ class FastRCNNTrainer(object):
                 n_labels=len(self.dataset.target_names),
             )
 
+            blobs, bboxes, t_labels, t_bboxes =\
+                map(cuda.to_gpu, [blobs, bboxes, t_labels, t_bboxes])
+
             self.optimizer.zero_grads()
+            volatile = 'OFF'
+            blobs = Variable(blobs, volatile=volatile)
+            bboxes = Variable(bboxes, volatile=volatile)
+            t_labels = Variable(t_labels, volatile=volatile)
+            t_bboxes = Variable(t_bboxes, volatile=volatile)
             loss = self.model(blobs, bboxes, (t_labels, t_bboxes), train=True)
             loss.backward()
             self.optimizer.update()
@@ -124,7 +127,7 @@ def main():
     model.to_gpu()
 
     trainer = FastRCNNTrainer(model, dataset=dataset)
-    trainer.main_loop(batch_size=10, epoch_size=10000)
+    trainer.main_loop(batch_size=3, epoch_size=100)
 
 
 if __name__ == '__main__':
