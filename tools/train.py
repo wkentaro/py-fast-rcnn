@@ -127,7 +127,7 @@ def main():
     model.to_gpu()
 
     trainer = FastRCNNTrainer(model, dataset=dataset)
-    trainer.main_loop(batch_size=10, epoch_size=10000)
+    trainer.main_loop(batch_size=3, epoch_size=100)
 
 
 if __name__ == '__main__':
