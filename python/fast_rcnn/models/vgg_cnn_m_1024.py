@@ -9,7 +9,7 @@ from chainer import Variable
 
 class VGG_CNN_M_1024(chainer.Chain):
 
-    def __init__(self, n_class):
+    def __init__(self, n_class, bg_label):
         super(VGG_CNN_M_1024, self).__init__(
             conv1=L.Convolution2D(3, 96, ksize=7, stride=2),
             conv2=L.Convolution2D(96, 256, ksize=5, stride=2, pad=1),
@@ -22,6 +22,7 @@ class VGG_CNN_M_1024(chainer.Chain):
             bbox_pred=L.Linear(1024, 4 * n_class)
         )
         self.n_class = n_class
+        self.bg_label = bg_label
 
     def __call__(self, x, rois, t=None, train=False):
         h = self.conv1(x)
