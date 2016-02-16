@@ -115,7 +115,7 @@ def get_region_targets(roi, bboxes, label, bg_label, n_labels,
         roi_delta = np.zeros((n_labels, 4))
         roi_delta[labels[i]] = [dx, dy, dw, dh]
         roi_deltas[i] = roi_delta
-    roi_deltas = roi_deltas.ravel()
+    roi_deltas = roi_deltas.reshape((len(roi_deltas), -1))
     return labels, roi_deltas
 
 
@@ -134,7 +134,7 @@ def load_batch_APC2015berkeley(fnames, labels, bg_label, n_labels):
         if osp.exists(cache_fname):
             # load cache
             with open(cache_fname, 'rb') as f:
-                blob, bboxes, labels, roi_deltas = pickle.load(f)
+                blob, bboxes, region_labels, roi_deltas = pickle.load(f)
         else:
             orig_im = cv2.imread(fname)
             if im_file_base.startswith('NP'):  # resize NPXXX file
