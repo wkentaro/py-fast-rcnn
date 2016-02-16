@@ -40,7 +40,7 @@ class FastRCNNTrainer(object):
 
     def batch_loop_train(self, batch_size):
         N = len(self.train_fnames)
-        random_index = np.random.randint(N)
+        random_index = np.random.randint(0, N, N)
         for i in xrange(0, N, batch_size):
             batch_index = random_index[i:i+batch_size]
             batch_fnames = self.train_fnames[batch_index]
@@ -61,7 +61,7 @@ class FastRCNNTrainer(object):
     def batch_loop_test(self, batch_size):
         sum_loss = 0
         N = len(self.test_fnames)
-        random_index = np.random.randint(N)
+        random_index = np.random.randint(0, N, N)
         for i in xrange(0, N, batch_size):
             batch_index = random_index[i:i+batch_size]
             batch_fnames = self.test_fnames[batch_index]
