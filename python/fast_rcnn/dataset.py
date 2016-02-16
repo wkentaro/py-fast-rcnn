@@ -187,5 +187,5 @@ def load_APC2015berkeley():
     dataset.target = dataset.target[keep]
     dataset.filenames = dataset.filenames[keep]
     dataset.target_names.append('__background__')
-    dataset.background_label = len(dataset.target_names)
+    dataset.background_label = dataset.target_names.index('__background__')
     return dataset
