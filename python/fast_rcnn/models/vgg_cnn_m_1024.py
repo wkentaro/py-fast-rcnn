@@ -66,7 +66,7 @@ class VGG_CNN_M_1024(chainer.Chain):
         self.cls_loss = F.softmax_cross_entropy(h_cls_score, t_cls)
         self.bbox_loss = F.smooth_l1_loss(bbox_pred, t_bbox)
 
-        bg_label = self.n_class
-        lambda_ = 0.5 * (t_cls != bg_label)
+        lambda_ = 0.5 * (t_cls.data != self.bg_label)
+        lambda_ = Variable(lambda_, volatile=not train)
         L = self.cls_loss + lambda_ * self.bbox_loss
         return L
