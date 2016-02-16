@@ -23,9 +23,10 @@ CLASSES = ('__background__',
 class FastRCNNTrainer(object):
 
     def __init__(self, model, dataset):
-
         self.model = model
-        self.train_img, self.test_img = train_test_split(dataset.filenames, test_size=.1)
+        (self.train_fnames, self.test_fnames,
+         self.train_targets, self.test_targets) =\
+            train_test_split(dataset.filenames, dataset.targets, test_size=.1)
 
         self.optimizer = optimizers.Adam()
         self.optimizer.setup(model)
@@ -34,13 +35,19 @@ class FastRCNNTrainer(object):
         self.sum_loss = []
 
     def batch_loop_train(self, batch_size):
-        N = len(self.train_img)
+        N = len(self.train_fnames)
         random_index = np.random.randint(N)
         for i in xrange(0, N, batch_size):
             batch_index = random_index[i:i+batch_size]
-            batch_file_names = self.train_img[batch_index]
+            batch_fnames = self.train_fnames[batch_index]
+            batch_labels = self.train_targets[batch_index]
 
-            blobs, bboxes, t_labels, t_bboxes = load_batch_APC2015berkeley(batch_file_names)
+            blobs, bboxes, t_labels, t_bboxes = load_batch_APC2015berkeley(
+                fnames=batch_fnames,
+                labels=batch_labels,
+                bg_label=self.dataset.background_label,
+                n_labels=len(self.dataset.target_names),
+            )
 
             self.optimizer.zero_grads()
             loss = self.model(blobs, bboxes, (t_labels, t_bboxes), train=True)
@@ -49,13 +56,19 @@ class FastRCNNTrainer(object):
 
     def batch_loop_test(self, batch_size):
         sum_loss = 0
-        N = len(self.test_img)
+        N = len(self.test_fnames)
         random_index = np.random.randint(N)
         for i in xrange(0, N, batch_size):
             batch_index = random_index[i:i+batch_size]
-            batch_file_names = self.test_img[batch_index]
+            batch_fnames = self.test_fnames[batch_index]
+            batch_labels = self.test_targets[batch_index]
 
-            blobs, bboxes, t_labels, t_bboxes = load_batch_APC2015berkeley(batch_file_names)
+            blobs, bboxes, t_labels, t_bboxes = load_batch_APC2015berkeley(
+                fnames=batch_fnames,
+                labels=batch_labels,
+                bg_label=self.dataset.background_label,
+                n_labels=len(self.dataset.target_names),
+            )
             loss = self.model(blobs, bboxes, (t_labels, t_bboxes), train=False)
             sum_loss += loss.data
             print(loss.data / batch_size)
