@@ -97,13 +97,13 @@ class FastRCNNTrainer(object):
                 self.batch_loop_train(batch_size)
 
 
-def load_pretrained_model(n_class):
+def load_pretrained_model(n_class, bg_label):
     param_dir = '%s/imagenet_models' % get_data_dir()
     param_fn = '%s/VGG_CNN_M_1024.v2.caffemodel' % param_dir
     model_dir = '%s/python/fast_rcnn/models' % fast_rcnn.get_root_dir()
     model_fn = '%s/test.prototxt' % model_dir
 
-    vgg = VGG_CNN_M_1024(n_class=n_class)
+    vgg = VGG_CNN_M_1024(n_class=n_class, bg_label=bg_label)
     net = caffe.Net(model_fn, param_fn, caffe.TEST)
     for name, param in net.params.iteritems():
         if 'conv' in name:
@@ -123,7 +123,8 @@ def main():
     dataset = load_APC2015berkeley()
 
     n_class = len(dataset.target_names)
-    model = load_pretrained_model(n_class=n_class)
+    model = load_pretrained_model(
+        n_class=n_class, bg_label=dataset.background_label)
     model.to_gpu()
 
     trainer = FastRCNNTrainer(model, dataset=dataset)
