@@ -25,4 +25,4 @@ for name, param in net.params.iteritems():
         layer.b.data = param[1].data
         setattr(vgg, name, layer)
 
-pickle.dump(vgg, open('data/chainer_models/VGG_pretrained.chainermodel', 'wb'), -1)
+pickle.dump(vgg, open('data/chainer_models/vgg_cnn_m_1024_pretrained.chainermodel', 'wb'), -1)
