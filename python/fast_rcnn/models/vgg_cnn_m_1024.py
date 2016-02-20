@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import chainer
+from chainer import cuda
 import chainer.functions as F
 import chainer.links as L
 from chainer import Variable
@@ -66,7 +67,8 @@ class VGG_CNN_M_1024(chainer.Chain):
         self.cls_loss = F.softmax_cross_entropy(h_cls_score, t_cls)
         self.bbox_loss = F.smooth_l1_loss(bbox_pred, t_bbox)
 
-        lambda_ = 0.5 * (t_cls.data != self.bg_label)
+        xp = cuda.get_array_module(x.data)
+        lambda_ = (0.5 * (t_cls.data != self.bg_label)).astype(xp.float32)
         lambda_ = Variable(lambda_, volatile=not train)
-        L = self.cls_loss + lambda_ * self.bbox_loss
+        L = self.cls_loss + F.sum(lambda_ * self.bbox_loss)
         return L
